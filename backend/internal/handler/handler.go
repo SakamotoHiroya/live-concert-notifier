@@ -13,8 +13,9 @@ type APIHandler struct {
 
 	users   *service.UserService
 	artists *service.ArtistService
+	follows *service.FollowService
 }
 
-func NewAPIHandler(users *service.UserService, artists *service.ArtistService) *APIHandler {
-	return &APIHandler{users: users, artists: artists}
+func NewAPIHandler(users *service.UserService, artists *service.ArtistService, follows *service.FollowService) *APIHandler {
+	return &APIHandler{users: users, artists: artists, follows: follows}
 }
