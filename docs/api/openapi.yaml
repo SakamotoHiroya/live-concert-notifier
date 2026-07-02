@@ -1,0 +1,670 @@
+openapi: 3.0.3
+info:
+  title: Live Concert Notifier API
+  description: ライブ・コンサート情報収集・通知システムのバックエンドAPI
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: ローカル開発環境
+
+tags:
+  - name: users
+    description: ユーザー管理
+  - name: artists
+    description: アーティストマスター
+  - name: follows
+    description: ユーザーのアーティストフォロー管理
+  - name: concerts
+    description: ライブ・コンサート情報
+  - name: dashboard
+    description: ダッシュボード
+  - name: admin
+    description: 管理・バッチ操作
+
+paths:
+
+  # -------------------------
+  # Users
+  # -------------------------
+  /users:
+    post:
+      tags: [users]
+      summary: ユーザー登録
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: 登録成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /users/{userId}:
+    get:
+      tags: [users]
+      summary: ユーザー取得
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # -------------------------
+  # Artists (master)
+  # -------------------------
+  /artists:
+    get:
+      tags: [artists]
+      summary: アーティスト一覧取得
+      parameters:
+        - name: q
+          in: query
+          description: アーティスト名の部分一致検索
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtistList'
+
+    post:
+      tags: [artists]
+      summary: アーティスト追加（管理者）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateArtistRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artist'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /artists/{artistId}:
+    get:
+      tags: [artists]
+      summary: アーティスト取得
+      parameters:
+        - $ref: '#/components/parameters/ArtistId'
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artist'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [artists]
+      summary: アーティスト更新（管理者）
+      parameters:
+        - $ref: '#/components/parameters/ArtistId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateArtistRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Artist'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [artists]
+      summary: アーティスト削除（管理者）
+      parameters:
+        - $ref: '#/components/parameters/ArtistId'
+      responses:
+        '204':
+          description: 削除成功
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # -------------------------
+  # Follows
+  # -------------------------
+  /users/{userId}/follows:
+    get:
+      tags: [follows]
+      summary: フォロー中アーティスト一覧
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtistList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [follows]
+      summary: アーティストをフォロー
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FollowArtistRequest'
+      responses:
+        '201':
+          description: フォロー成功
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /users/{userId}/follows/{artistId}:
+    delete:
+      tags: [follows]
+      summary: アーティストのフォロー解除
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ArtistId'
+      responses:
+        '204':
+          description: フォロー解除成功
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # -------------------------
+  # Concerts
+  # -------------------------
+  /concerts:
+    get:
+      tags: [concerts]
+      summary: コンサート一覧取得
+      parameters:
+        - name: artist_id
+          in: query
+          description: アーティストIDで絞り込み
+          schema:
+            type: string
+            format: uuid
+        - name: from
+          in: query
+          description: 開催日の絞り込み開始日（YYYY-MM-DD）
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: 開催日の絞り込み終了日（YYYY-MM-DD）
+          schema:
+            type: string
+            format: date
+        - name: is_festival
+          in: query
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConcertList'
+
+  /concerts/{concertId}:
+    get:
+      tags: [concerts]
+      summary: コンサート詳細取得
+      parameters:
+        - $ref: '#/components/parameters/ConcertId'
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Concert'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # -------------------------
+  # Dashboard
+  # -------------------------
+  /users/{userId}/dashboard:
+    get:
+      tags: [dashboard]
+      summary: ダッシュボード取得
+      description: |
+        フォロー中アーティストの今後のライブ一覧を返す。
+        `is_new` が true のものは過去7日以内に discovered_at が設定されたライブ。
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # -------------------------
+  # Admin
+  # -------------------------
+  /admin/scrape:
+    post:
+      tags: [admin]
+      summary: スクレイピングを手動実行
+      description: 指定アーティスト（省略時は全件）のスクレイピングを即時トリガーする。
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TriggerScrapeRequest'
+      responses:
+        '202':
+          description: ジョブ受付成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerScrapeResponse'
+
+  /admin/scrape-jobs:
+    get:
+      tags: [admin]
+      summary: スクレイピングジョブ一覧
+      parameters:
+        - name: artist_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ScrapeJobStatus'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScrapeJobList'
+
+  /admin/scrape-jobs/{jobId}:
+    get:
+      tags: [admin]
+      summary: スクレイピングジョブ詳細
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScrapeJob'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+# -------------------------
+# Components
+# -------------------------
+components:
+
+  parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ArtistId:
+      name: artistId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ConcertId:
+      name: concertId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+
+    Offset:
+      name: offset
+      in: query
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+
+  schemas:
+
+    # --- User ---
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        created_at:
+          type: string
+          format: date-time
+      required: [id, email, created_at]
+
+    CreateUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required: [email]
+
+    # --- Artist ---
+    Artist:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Mrs. GREEN APPLE"
+        official_site_url:
+          type: string
+          format: uri
+          example: "https://mrsgreenaple.jp/schedule"
+        created_at:
+          type: string
+          format: date-time
+      required: [id, name, official_site_url, created_at]
+
+    ArtistList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Artist'
+        total:
+          type: integer
+      required: [items, total]
+
+    CreateArtistRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        official_site_url:
+          type: string
+          format: uri
+      required: [name, official_site_url]
+
+    UpdateArtistRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        official_site_url:
+          type: string
+          format: uri
+
+    # --- Follow ---
+    FollowArtistRequest:
+      type: object
+      properties:
+        artist_id:
+          type: string
+          format: uuid
+      required: [artist_id]
+
+    # --- Concert ---
+    Concert:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        artist_id:
+          type: string
+          format: uuid
+        artist_name:
+          type: string
+          description: JOIN済みのアーティスト名（表示用）
+        title:
+          type: string
+          example: "ARENA TOUR 2026"
+        venue_name:
+          type: string
+          example: "さいたまスーパーアリーナ"
+        venue_location:
+          type: string
+          example: "埼玉県"
+        date:
+          type: string
+          format: date
+          example: "2026-08-15"
+        co_performers:
+          type: array
+          items:
+            type: string
+          example: ["Vaundy", "Omoinotake"]
+        is_festival:
+          type: boolean
+        source_url:
+          type: string
+          format: uri
+        discovered_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - artist_id
+        - artist_name
+        - venue_name
+        - venue_location
+        - date
+        - co_performers
+        - is_festival
+        - source_url
+        - discovered_at
+        - created_at
+
+    ConcertList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Concert'
+        total:
+          type: integer
+      required: [items, total]
+
+    # --- Dashboard ---
+    DashboardConcert:
+      allOf:
+        - $ref: '#/components/schemas/Concert'
+        - type: object
+          properties:
+            is_new:
+              type: boolean
+              description: 過去7日以内に発見されたライブの場合 true
+          required: [is_new]
+
+    DashboardResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DashboardConcert'
+        total:
+          type: integer
+      required: [items, total]
+
+    # --- ScrapeJob ---
+    ScrapeJobStatus:
+      type: string
+      enum: [pending, running, succeeded, failed]
+
+    ScrapeJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        artist_id:
+          type: string
+          format: uuid
+        artist_name:
+          type: string
+        status:
+          $ref: '#/components/schemas/ScrapeJobStatus'
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+        error_message:
+          type: string
+          nullable: true
+      required: [id, artist_id, artist_name, status]
+
+    ScrapeJobList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScrapeJob'
+        total:
+          type: integer
+      required: [items, total]
+
+    TriggerScrapeRequest:
+      type: object
+      description: 省略時は全アーティストを対象とする
+      properties:
+        artist_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    TriggerScrapeResponse:
+      type: object
+      properties:
+        job_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: 作成されたジョブのID一覧
+      required: [job_ids]
+
+    # --- Error ---
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "NOT_FOUND"
+        message:
+          type: string
+          example: "指定されたリソースが見つかりません"
+      required: [code, message]
+
+  responses:
+    BadRequest:
+      description: リクエストが不正
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: リソースが見つからない
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: リソースが既に存在する
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
