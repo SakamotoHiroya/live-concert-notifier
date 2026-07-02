@@ -90,9 +90,34 @@ refactor/auth
 
 ---
 
+## Issue
+
+形式
+
+```text
+<gitmoji> <type>: <description>
+```
+
+例
+
+```text
+✨ feature: add push notification for new concerts
+🐛 fix: fix duplicate notification on scraping retry
+📝 docs: add API spec for concerts endpoint
+```
+
+### Rules
+
+* Issueのtype・gitmojiはBranch/Commitと同じ表を使う
+* 1つのIssueでは1つの目的（機能・バグ・タスク）のみ扱う
+* 本文には背景・完了条件（Acceptance Criteria）を書く
+* 対応するPRはIssueをクローズするキーワード（`Closes #<番号>`等）を含める
+
+---
+
 ## Rules
 
-* ブランチ名・コミット名・PR名は英語で記述する
+* ブランチ名・コミット名・PR名・Issue名は英語で記述する
 * `description` は短く内容が分かる名前にする
-* 1つのブランチ・PRでは1つの目的のみ扱う
+* 1つのブランチ・PR・Issueでは1つの目的のみ扱う
 * Gitmojiを必ず付ける
