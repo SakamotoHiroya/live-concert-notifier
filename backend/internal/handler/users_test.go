@@ -25,7 +25,8 @@ func newTestAPIHandler(t *testing.T) *handler.APIHandler {
 	t.Cleanup(pool.Close)
 
 	userService := service.NewUserService(repository.NewUserRepository(pool))
-	return handler.NewAPIHandler(userService)
+	artistService := service.NewArtistService(repository.NewArtistRepository(pool))
+	return handler.NewAPIHandler(userService, artistService)
 }
 
 func TestAPIHandler_Users(t *testing.T) {

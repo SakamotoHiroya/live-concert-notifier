@@ -26,7 +26,8 @@ func main() {
 	defer pool.Close()
 
 	userService := service.NewUserService(repository.NewUserRepository(pool))
-	apiHandler := handler.NewAPIHandler(userService)
+	artistService := service.NewArtistService(repository.NewArtistRepository(pool))
+	apiHandler := handler.NewAPIHandler(userService, artistService)
 
 	mux := http.NewServeMux()
 	handler.RegisterRoutes(mux, apiHandler)
