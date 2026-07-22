@@ -24,9 +24,13 @@ func newTestAPIHandler(t *testing.T) *handler.APIHandler {
 	}
 	t.Cleanup(pool.Close)
 
-	userService := service.NewUserService(repository.NewUserRepository(pool))
-	artistService := service.NewArtistService(repository.NewArtistRepository(pool))
-	return handler.NewAPIHandler(userService, artistService)
+	userRepo := repository.NewUserRepository(pool)
+	artistRepo := repository.NewArtistRepository(pool)
+
+	userService := service.NewUserService(userRepo)
+	artistService := service.NewArtistService(artistRepo)
+	followService := service.NewFollowService(repository.NewFollowRepository(pool), userRepo, artistRepo)
+	return handler.NewAPIHandler(userService, artistService, followService)
 }
 
 func TestAPIHandler_Users(t *testing.T) {
