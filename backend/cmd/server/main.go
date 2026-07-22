@@ -31,7 +31,8 @@ func main() {
 	userService := service.NewUserService(userRepo)
 	artistService := service.NewArtistService(artistRepo)
 	followService := service.NewFollowService(repository.NewFollowRepository(pool), userRepo, artistRepo)
-	apiHandler := handler.NewAPIHandler(userService, artistService, followService)
+	concertService := service.NewConcertService(repository.NewConcertRepository(pool))
+	apiHandler := handler.NewAPIHandler(userService, artistService, followService, concertService)
 
 	mux := http.NewServeMux()
 	handler.RegisterRoutes(mux, apiHandler)

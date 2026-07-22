@@ -30,7 +30,8 @@ func newTestAPIHandler(t *testing.T) *handler.APIHandler {
 	userService := service.NewUserService(userRepo)
 	artistService := service.NewArtistService(artistRepo)
 	followService := service.NewFollowService(repository.NewFollowRepository(pool), userRepo, artistRepo)
-	return handler.NewAPIHandler(userService, artistService, followService)
+	concertService := service.NewConcertService(repository.NewConcertRepository(pool))
+	return handler.NewAPIHandler(userService, artistService, followService, concertService)
 }
 
 func TestAPIHandler_Users(t *testing.T) {
