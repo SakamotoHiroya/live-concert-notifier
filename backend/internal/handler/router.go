@@ -8,11 +8,12 @@ import (
 )
 
 // RegisterRoutes registers all HTTP routes on the given mux.
-// API routes defined in docs/api/openapi.yaml are served under /api/v1/.
-func RegisterRoutes(mux *http.ServeMux) {
+// API routes defined in docs/api/openapi.yaml are served under /api/v1/,
+// backed by apiHandler.
+func RegisterRoutes(mux *http.ServeMux, apiHandler *APIHandler) {
 	mux.HandleFunc("GET /healthz", handleHealthz)
 
-	srv, err := oas.NewServer(NewAPIHandler())
+	srv, err := oas.NewServer(apiHandler)
 	if err != nil {
 		log.Fatalf("failed to build oas server: %v", err)
 	}
