@@ -34,7 +34,8 @@ func main() {
 	followService := service.NewFollowService(repository.NewFollowRepository(pool), userRepo, artistRepo)
 	concertService := service.NewConcertService(concertRepo)
 	dashboardService := service.NewDashboardService(concertRepo, userRepo)
-	apiHandler := handler.NewAPIHandler(userService, artistService, followService, concertService, dashboardService)
+	adminScrapeService := service.NewAdminScrapeService(repository.NewScrapeJobRepository(pool), artistRepo, service.LogScraperTrigger{})
+	apiHandler := handler.NewAPIHandler(userService, artistService, followService, concertService, dashboardService, adminScrapeService)
 
 	mux := http.NewServeMux()
 	handler.RegisterRoutes(mux, apiHandler)

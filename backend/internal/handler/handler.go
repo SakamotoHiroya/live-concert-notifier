@@ -11,13 +11,28 @@ import (
 type APIHandler struct {
 	oas.UnimplementedHandler
 
-	users     *service.UserService
-	artists   *service.ArtistService
-	follows   *service.FollowService
-	concerts  *service.ConcertService
-	dashboard *service.DashboardService
+	users       *service.UserService
+	artists     *service.ArtistService
+	follows     *service.FollowService
+	concerts    *service.ConcertService
+	dashboard   *service.DashboardService
+	adminScrape *service.AdminScrapeService
 }
 
-func NewAPIHandler(users *service.UserService, artists *service.ArtistService, follows *service.FollowService, concerts *service.ConcertService, dashboard *service.DashboardService) *APIHandler {
-	return &APIHandler{users: users, artists: artists, follows: follows, concerts: concerts, dashboard: dashboard}
+func NewAPIHandler(
+	users *service.UserService,
+	artists *service.ArtistService,
+	follows *service.FollowService,
+	concerts *service.ConcertService,
+	dashboard *service.DashboardService,
+	adminScrape *service.AdminScrapeService,
+) *APIHandler {
+	return &APIHandler{
+		users:       users,
+		artists:     artists,
+		follows:     follows,
+		concerts:    concerts,
+		dashboard:   dashboard,
+		adminScrape: adminScrape,
+	}
 }

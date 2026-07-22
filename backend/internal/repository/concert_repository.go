@@ -37,6 +37,10 @@ type NewConcert struct {
 // Create inserts a concert, skipping silently (inserted=false) if a concert
 // with the same (artist_id, date, venue_name) already exists.
 func (r *ConcertRepository) Create(ctx context.Context, c NewConcert) (concert domain.Concert, inserted bool, err error) {
+	coPerformers := c.CoPerformers
+	if coPerformers == nil {
+		coPerformers = []string{}
+	}
 	row, err := r.q.CreateConcert(ctx, sqlcgen.CreateConcertParams{
 		ID:            toUUID(c.ID),
 		ArtistID:      toUUID(c.ArtistID),
@@ -44,7 +48,7 @@ func (r *ConcertRepository) Create(ctx context.Context, c NewConcert) (concert d
 		VenueName:     c.VenueName,
 		VenueLocation: c.VenueLocation,
 		Date:          toDate(c.Date),
-		CoPerformers:  c.CoPerformers,
+		CoPerformers:  coPerformers,
 		IsFestival:    c.IsFestival,
 		SourceUrl:     c.SourceURL,
 		RawText:       c.RawText,
