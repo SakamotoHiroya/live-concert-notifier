@@ -1,11 +1,16 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+// ErrInvalidScrapeJobStatus is returned when a status transition is
+// attempted with a value outside ScrapeJobStatus's known set.
+var ErrInvalidScrapeJobStatus = errors.New("domain: invalid scrape job status")
 
 // ScrapeJobStatus is the lifecycle state of a ScrapeJob.
 type ScrapeJobStatus string
@@ -31,6 +36,7 @@ func (s ScrapeJobStatus) Valid() bool {
 type ScrapeJob struct {
 	ID           uuid.UUID
 	ArtistID     uuid.UUID
+	ArtistName   string
 	Status       ScrapeJobStatus
 	StartedAt    *time.Time
 	FinishedAt   *time.Time
@@ -49,7 +55,7 @@ func NewScrapeJob(id, artistID uuid.UUID) ScrapeJob {
 // SetStatus updates the status, rejecting unknown values.
 func (j *ScrapeJob) SetStatus(status ScrapeJobStatus) error {
 	if !status.Valid() {
-		return fmt.Errorf("domain: invalid scrape job status %q", status)
+		return fmt.Errorf("%w: %q", ErrInvalidScrapeJobStatus, status)
 	}
 	j.Status = status
 	return nil

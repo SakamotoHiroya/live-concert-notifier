@@ -10,6 +10,7 @@ import (
 type Concert struct {
 	ID            uuid.UUID
 	ArtistID      uuid.UUID
+	ArtistName    string
 	Title         string
 	VenueName     string
 	VenueLocation string
