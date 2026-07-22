@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS scrape_jobs;
+DROP TABLE IF EXISTS concerts;
+DROP TABLE IF EXISTS user_artists;
+DROP TABLE IF EXISTS artists;
+DROP TABLE IF EXISTS users;
